@@ -2,7 +2,13 @@ const express = require("express");
 const router = express.Router();
 
 // instruction: import the course model
-const Course = require("../models/course");
+const {
+  getCourses,
+  getCourse,
+  addNewCourse,
+  updateCourse,
+  deleteCourse,
+} = require("../controller/course");
 
 /* 
     instruction: 
@@ -11,7 +17,7 @@ const Course = require("../models/course");
 */
 router.get("/", async (req, res) => {
   try {
-    const courses = await Course.find().populate("instructor");
+    const courses = await getCourses();
     res.status(200).send(courses);
   } catch (error) {
     res.status(400).send(error._message);
@@ -23,7 +29,7 @@ router.get("/", async (req, res) => {
 router.get("/:id", async (req, res) => {
   try {
     const id = req.params.id;
-    const course = await Course.findById(id).populate("instructor");
+    const course = await getCourse(id);
     res.status(200).send(course);
   } catch (error) {
     res.status(400).send(error._message);
@@ -32,16 +38,23 @@ router.get("/:id", async (req, res) => {
 // instruction: setup POST /: Add a new course
 router.post("/", async (req, res) => {
   try {
-    // const title = req.body.title;
-    // const instructor = req.body.instructor;
-    // const startDate = req.body.startDate;
-    // const endDate = req.body.endDate;
-    // const subject = req.body.subject;
-    // const description = req.body.description;
-    // const enrollmentCount = req.body.enrollmentCount;
+    const title = req.body.title;
+    const instructor = req.body.instructor;
+    const startDate = req.body.startDate;
+    const endDate = req.body.endDate;
+    const subject = req.body.subject;
+    const description = req.body.description;
+    const enrollmentCount = req.body.enrollmentCount;
 
-    const newCourse = new Course(req.body);
-    await newCourse.save();
+    const newCourse = await addNewCourse(
+      title,
+      instructor,
+      startDate,
+      endDate,
+      subject,
+      description,
+      enrollmentCount
+    );
     res.status(200).send(newCourse);
   } catch (error) {
     res.status(400).send(error._message);
@@ -60,18 +73,15 @@ router.put("/:id", async (req, res) => {
     const description = req.body.description;
     const enrollmentCount = req.body.enrollmentCount;
 
-    const updatedCourse = await Course.findByIdAndUpdate(
+    const updatedCourse = await updateCourse(
       id,
-      {
-        title,
-        instructor,
-        startDate,
-        endDate,
-        subject,
-        description,
-        enrollmentCount,
-      },
-      { new: true }
+      title,
+      instructor,
+      startDate,
+      endDate,
+      subject,
+      description,
+      enrollmentCount
     );
     res.status(200).send(updatedCourse);
   } catch (error) {
@@ -84,7 +94,7 @@ router.put("/:id", async (req, res) => {
 router.delete("/:id", async (req, res) => {
   try {
     const id = req.params.id;
-    await Course.findByIdAndDelete(id);
+    await deleteCourse(id);
     res
       .status(200)
       .send({ message: `Course with provided id #${id} has been deleted` });
